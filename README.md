@@ -19,7 +19,7 @@ source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 setup dunetpc v08_62_00 -q e19:prof # or whatever version of dunetpc we are on
 mrb newDev
 . localProducts_larsoft_*/setup
-mrb g https://github.com/icaromx/icebergelifetime.git
+mrb g https://github.com/icaromx/icebergelifetime
 mrbsetenv
 mrb i
 ```
