@@ -108,10 +108,8 @@ private:
   std::string fHitModuleLabel;
   std::string fTrackModuleLabel;
   std::string fCalorimetryModuleLabel;
-  bool fSaveRawWaveForm;
-  std::vector<int> fSelectedWires;
 
-  // reset
+  // variable reset
   void reset();
 
   // TTree
@@ -151,25 +149,6 @@ private:
   float trkhitpeakt[kMaxTracks][3][kMaxHits];
   int nplane[kMaxTracks][3][kMaxHits];
 
-  // hit
-  //double trkhitx[kMaxTracks][3][kMaxHits];
-  //double trkhity[kMaxTracks][3][kMaxHits];
-  //double trkhitz[kMaxTracks][3][kMaxHits];
-
-  //int wireid[kMaxTracks][kMaxHits];
-  //int chid[kMaxTracks][kMaxHits];
-  //int tpcid[kMaxTracks][kMaxHits];
-  //float hit_plane[kMaxTracks][kMaxHits];
-
-  //double cosgma[kMaxTracks][kMaxHits];
-
-  //std::vector<std::vector< double > >* _trkdqdx_v; 
-
-  // waveform
-  int fNticks; 
-  int fNticksReadout;
-  float fSampleRate;
-
 };
 
 
@@ -181,20 +160,8 @@ icebergelifetime::icebergelifetime(fhicl::ParameterSet const& p)
   fHitModuleLabel         = p.get<std::string>("HitModuleLabel");
   fTrackModuleLabel       = p.get<std::string>("TrackModuleLabel");
   fCalorimetryModuleLabel = p.get<std::string>("CalorimetryModuleLabel");
-  fSaveRawWaveForm        = p.get<bool>("SaveRawWaveForm");
-  fSelectedWires          = p.get<std::vector<int>>("SelectedWires");
-
-  //produces<art::Assns<recob::Hit, anab::Calorimetry>>();
-
+  
   // DetectorPropertiesService
-  auto const *detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
-  fNticks = detprop->NumberTimeSamples(); // number of clock ticks per event
-  fNticksReadout = detprop->ReadOutWindowSize(); // number of clock ticks per readout window
-  fSampleRate = detprop->SamplingRate(); // period of the TPC readout electronics clock
-
-  cout << "Numer of clock ticks per event: " << fNticks << endl;
-  cout << "Numer of clock ticks per readout window: " << fNticksReadout << endl;
-  cout << "Sampling rate: " << fSampleRate << endl;
   cout << "Using fCalorimetryModuleLabel = " << fCalorimetryModuleLabel << endl;
 }
 
@@ -210,10 +177,6 @@ void icebergelifetime::analyze(art::Event const& e)
   TTimeStamp tts(ts.timeHigh(), ts.timeLow());
   evttime = tts.AsDouble();
   
-
-  //cout << "tts " << tts << endl;
-  //cout << "evttime " << evttime << endl;
-
   UInt_t year=0;
   UInt_t month=0;
   UInt_t day=0;
@@ -226,19 +189,12 @@ void icebergelifetime::analyze(art::Event const& e)
 
   hour_min_sec=tts.GetTime(kTRUE,0,&hour,&min,&sec);
 
-
-  // channel status
-  //lariov::ChannelStatusProvider const& channelStatus
-  //  = art::ServiceHandle<lariov::ChannelStatusService const>()->GetProvider();
-
   // hit
   art::Handle< std::vector<recob::Hit> > hitListHandle;
   std::vector< art::Ptr<recob::Hit> > hitlist;
   if (e.getByLabel(fHitModuleLabel, hitListHandle)) {
     art::fill_ptr_vector(hitlist, hitListHandle);
   }
-
-//if(event.getByLabel("hitpdune", hitListHandle)) art::fill_ptr_vector(hitlist, hitListHandle);
 
   // track
   art::Handle< std::vector<recob::Track> > trackListHandle;
@@ -248,19 +204,12 @@ void icebergelifetime::analyze(art::Event const& e)
   }
 
   art::ServiceHandle<geo::Geometry> geom;
-
   art::FindManyP<recob::Hit> fmtrkhit(trackListHandle, e, fTrackModuleLabel);
   art::FindManyP<anab::Calorimetry> fmtrkcalo(trackListHandle, e, fCalorimetryModuleLabel);
-  //art::FindManyP<raw::RawDigit> fmhitrawdigit(hitListHandle, e, fHitModuleLabel);
-  //art::FindManyP<recob::Wire> fmhitwire(hitListHandle, e, fHitModuleLabel);
-  //art::FindManyP<raw::RawDigit> fmwirerawdigit(wireListHandle, e, "digitwire");
   art::FindManyP<recob::Hit, recob::TrackHitMeta> fmhittrkmeta(trackListHandle, e, fTrackModuleLabel);
   
-
-
   auto const *detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
-  
   ntrks = 0;
   for (const auto& trk : tracklist) {
     if(ntrks >= kMaxTracks) break;
@@ -298,32 +247,23 @@ void icebergelifetime::analyze(art::Event const& e)
     // calometry
     if (fmtrkcalo.isValid()) {
       std::vector<art::Ptr<anab::Calorimetry>> calos = fmtrkcalo.at(ntrks);
-      //std::vector<art::Ptr<recob::Hit>> rhits = fmtrkhit.at(ntrks);
-      //std::vector<art::Assns<recob::Hit, anab::Calorimetry> > caloshits = 
-      //std::auto_ptr< art::Assns<anab::Calorimetry, recob::Hit> > assn(new art::Assns<anab::Calorimetry, recob::Hit>);
-
-      //cout << "Start Calo loop, calos size = "<< calos.size() << " and rhits size =  " << rhits.size() << ", for trk " << ntrks << endl;
+      
       for (size_t icalo=0; icalo<calos.size(); icalo++) {// loops over planes , n = 3
         if (!calos[icalo]) continue;
         if (!calos[icalo]->PlaneID().isValid) continue;
         int planenum = calos[icalo]->PlaneID().Plane;
-        if (planenum<0 || planenum>2) continue;
-        //cout << "Looking at Plane " << planenum << endl; 
+        if (planenum<0 || planenum>2) continue; 
         const size_t NHits = calos[icalo] -> dEdx().size();
         if(NHits > kMaxHits) continue;
         ntrkhits[ntrks][planenum] = NHits;
-        //cout << TString::Format("ntrkhits[%d][%d] = ",ntrks,planenum) << ntrkhits[ntrks][planenum] << endl;
-
         //Loop through hits to find min X
         double minx = 1e9; double minpht = 1e9;
         for (size_t iHit=0; iHit<NHits; ++iHit) {
-          //cout << "(calos[icalo]->TrkPitchVec())[iHit]" << (calos[icalo]->TrkPitchVec())[iHit] << endl; 
           trkpitchvec[ntrks][planenum][iHit] = (calos[icalo]->TrkPitchVec())[iHit];
           if ((calos[icalo]->TrkPitchVec())[iHit]>1) continue;
           const auto& TrkPos = (calos[icalo] -> XYZ())[iHit];
           if (TrkPos.X() < minx){
             minx = TrkPos.X();
-            //cout << minx << endl;
           }
           size_t tpIndex=(calos[icalo]->TpIndices()[iHit]);
           if (hitlist[tpIndex]->Multiplicity()>1) continue;
@@ -341,7 +281,6 @@ void icebergelifetime::analyze(art::Event const& e)
           size_t tpIndex=(calos[icalo]->TpIndices()[iHit]);
           if (hitlist[tpIndex]->Multiplicity()>1) continue;
           trkhitpeakt[ntrks][planenum][iHit]=hitlist[tpIndex]->PeakTime()*(500./1000.f) - minpht; //in microsec
-
           
           trkxNoCorr[ntrks][planenum][iHit] = TrkPos1.X();
           double x = TrkPos1.X() - minx; //subtract the minx to get correct t0
@@ -351,7 +290,6 @@ void icebergelifetime::analyze(art::Event const& e)
           trkx[ntrks][planenum][iHit] = x;
           trkt[ntrks][planenum][iHit] = t;
           trkdqdx[ntrks][planenum][iHit] = (calos[icalo]->dQdx())[iHit];
-          //cout << Form("trkhitpeakt[%d][%d][%d] = ",ntrks,planenum,(int) iHit) << trkhitpeakt[ntrks][planenum][iHit] << ", t = " << t << endl;
           nplane[ntrks][planenum][iHit] = planenum;
         }// end loop hits
 
@@ -359,81 +297,6 @@ void icebergelifetime::analyze(art::Event const& e)
     
     } //  end if fmtrkcalo
 
-    // hits associated with trk
-/*
-    std::vector<art::Ptr<recob::Hit>> allhits = fmtrkhit.at(ntrks); // use either trk.key() or ntrks 
-    
-    for (size_t ihit=0; ihit<allhits.size(); ihit++) {
-      // wire plane information
-      unsigned int wireplane = allhits[ihit]->WireID().Plane;
-      if (wireplane <0 || wireplane>2) continue;
-      unsigned int wire = allhits[ihit]->WireID().Wire;
-      unsigned int tpc = allhits[ihit]->WireID().TPC;
-      unsigned int channel = allhits[ihit]->Channel();
-     
-      if (channelStatus.IsBad(channel)) continue;
-
-      // hit position: not all hits are associated with space points, using neighboring space points to interpolate
-      
-      double xyz[3] = {-9999.0, -9999.0, -9999.0};
-      bool fBadhit = false;
-
-      if (fmhittrkmeta.isValid()) {
-        auto vhit = fmhittrkmeta.at(ntrks);
-        auto vmeta = fmhittrkmeta.data(ntrks);
-
-        for (size_t ii=0; ii<vhit.size(); ii++) {
-          if (vhit[ii].key() == allhits[ihit].key()) {
-            
-            if (vmeta[ii]->Index() == std::numeric_limits<int>::max()) {
-              fBadhit = true;
-              continue;
-            }
-
-            if (vmeta[ii]->Index() >= trk->NumberTrajectoryPoints()) {
-              throw cet::exception("Calorimetry_module.cc") << "Requested track trajectory index "<<vmeta[ii]->Index()<<" exceeds the total number of trajectory points "<<trk->NumberTrajectoryPoints()<<" for track index "<<ntrks<<". Something is wrong with the track reconstruction. Please contact tjyang@fnal.gov!!";
-            }
-
-            if (!trk->HasValidPoint(vmeta[ii]->Index())) {
-              fBadhit = true;
-              continue;
-            }
-            
-            auto loc = trk->LocationAtPoint(vmeta[ii]->Index());
-            xyz[0] = loc.X();
-            xyz[1] = loc.Y();
-            xyz[2] = loc.Z();
-            
-            break;
-          } // if (vhit[ii].key() == allhits[ihit].key())
-        
-        } // end of for ii
-
-      } // if fmhittrkmeta.isValid()
-
-      if (fBadhit) continue;
-      
-      //trkhitx[ntrks][wireplane][ihit] = xyz[0];
-      //trkhity[ntrks][wireplane][ihit] = xyz[1];
-      //trkhitz[ntrks][wireplane][ihit] = xyz[2];
-      
-      wireid[ntrks][ihit] = wire;
-      chid[ntrks][ihit] = channel;
-      tpcid[ntrks][ihit] = tpc;
-      hit_plane[ntrks][ihit] = wireplane;
-
-      // calculate track angle w.r.t. wire
-      double angleToVert = geom->WireAngleToVertical(geom->View(allhits[ihit]->WireID()), allhits[ihit]->WireID().TPC, allhits[ihit]->WireID().Cryostat)-0.5*::util::pi<>();
-      const auto& dir = trk->DirectionAtPoint(0);
-      // angleToVert: return the angle w.r.t y+ axis, anti-closewise
-      // dir: 3d track direction: u = (x,y,z);
-      // vector that perpendicular to wires in yz plane v = (0, sin(angleToVert), cos(angleToVert))   
-      // cos gamma = u.Dot(v)/(u.mag()*v.mag()) here, u.mag()=v.mag()=1
-      double tmp_cosgamma = abs(sin(angleToVert)*dir.Y() + std::cos(angleToVert)*dir.Z());
-      cosgma[ntrks][ihit] = tmp_cosgamma;
-      
-    }
-    */
     ntrks++;
     if(ntrks > kMaxTracks) break;
 
@@ -478,11 +341,6 @@ void icebergelifetime::beginJob()
   fEventTree->Branch("trkt", trkt, "trkt[ntrks][3][1000]/F");
   fEventTree->Branch("nplane", nplane, "nplane[ntrks][3][1000]/I");
 
-  // hit
-  //fEventTree->Branch("trkhitx", trkhitx, "trkhitx[ntrks][3][700]/D");
-  //fEventTree->Branch("trkhity", trkhity, "trkhity[ntrks][3][700]/D");
-  //fEventTree->Branch("trkhitz", trkhitz, "trkhitz[ntrks][3][700]/D");
-  
 }
 
 void icebergelifetime::endJob()
@@ -518,14 +376,9 @@ void icebergelifetime::reset(){
       trkminx[i][j] = -9999.0;
       for (int k=0; k<kMaxHits; k++) {
         trkpitchvec[i][j][k] = -9999.0;
-        //trkhitx[i][j][k] = -9999.0;
-        //trkhity[i][j][k] = -9999.0;
-        //trkhitz[i][j][k] = -9999.0;
-
         trkdqdx[i][j][k] = -9999.0;
         trkhitpeakt[i][j][k] = -9999.0;
         nplane[i][j][k] = -1;
-        //trkdedx[i][j][k] = -9999.0;
         trkx[i][j][k] = -9999.0;
         trkxNoCorr[i][j][k] = -9999.0;
         trkt[i][j][k] = -9999.0;
