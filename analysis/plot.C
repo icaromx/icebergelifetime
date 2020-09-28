@@ -8,8 +8,9 @@ TString getDir( const std::string& subdir ){
   return getdir;
 }
 
-void plot() {
+void plot(TString FILENAME, TString RUNNUM) {
   int nplots = 100;
+  double fitrange[2] = {30, 150};
 
   // plot options
   const char * plane_options[3] = {"u","v","y"};
@@ -19,7 +20,7 @@ void plot() {
   TString plotdir = getDir("Plots/");
 
   // input
-  TFile *input = TFile::Open("fout_ana_eLifetime.root");
+  TFile *input = TFile::Open(Form("%s.root",FILENAME.Data()));
 
   TGraph *g1_eLifeVSRun_tpc0_plane2 = (TGraph*)input->Get("g1_eLifeVSRun_tpc0_plane2");
   TGraph *g1_eLifeVSRun_tpc1_plane2 = (TGraph*)input->Get("g1_eLifeVSRun_tpc1_plane2");
@@ -62,6 +63,7 @@ void plot() {
   TH2F *h2_trk_angle_with_cut = (TH2F*)input->Get("h2_trk_angle_with_cut");
 
   TH2F *h2_trk_startX_startY = (TH2F*)input->Get("h2_trk_startX_startY");
+  TH2F *h2_trk_startX_startY_selected = (TH2F*)input->Get("h2_trk_startX_startY_selected");
 
   TH2F *h2_dqdxhitpeakt_plane_2 = (TH2F*)input->Get("h2_dqdxhitpeakt_plane_2");
 
@@ -79,6 +81,13 @@ void plot() {
   TH2F* h2_dqdxX_tpc1[3];
   TProfile2D *hp2d_angle_dqdx[3];
 
+  TH2F* h2_dqdxhitpeakt_tpc0[3];
+  TH2F* h2_dqdxhitpeakt_tpc1[3];
+  TH2F* h2_dqdxhitpeakt_tpc01[3];
+
+  TH2F* h2_dqdxhitpeakt_tpc0_trunc[3];
+  TH2F* h2_dqdxhitpeakt_tpc1_trunc[3];
+  TH2F* h2_dqdxhitpeakt_tpc01_trunc[3];
 
 
   for (int p=0; p<3; p++) {
@@ -97,6 +106,15 @@ void plot() {
     h2_dqdxX_tpc1[p] = (TH2F*)input->Get(TString::Format("h2_dqdxX_tpc1_plane_%d",p));
     
     hp2d_angle_dqdx[p] = (TProfile2D*)input->Get(TString::Format("hp2d_angle_dqdx_plane_%d",p));
+
+    h2_dqdxhitpeakt_tpc0_trunc[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc0_plane_%d_trunc",p));
+    h2_dqdxhitpeakt_tpc1_trunc[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc1_plane_%d_trunc",p));
+    h2_dqdxhitpeakt_tpc01_trunc[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc01_plane_%d_trunc",p));
+
+    h2_dqdxhitpeakt_tpc0[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc0_plane_%d",p));
+    h2_dqdxhitpeakt_tpc1[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc1_plane_%d",p));
+    h2_dqdxhitpeakt_tpc01[p] = (TH2F*)input->Get(TString::Format("h2_dqdxhitpeakt_tpc01_plane_%d",p));
+
   }
   
   //TH1F* h1_dqdxVSddist[3][nplots];
@@ -104,6 +122,7 @@ void plot() {
   TH1F* h1_dqdxVSddist_tpc1[3][nplots];
   TH1F* h1_dqdxVShpeaktime_tpc0[3][nplots];
   TH1F* h1_dqdxVShpeaktime_tpc1[3][nplots];
+  TH1F* h1_dqdxVShpeaktime_tpc01[3][nplots];
   for (int n = 0; n < nplots; ++n){
     for (int ip = 0; ip < 3; ++ip){
       //h1_dqdxVSddist[ip][n] = (TH1F*)input->Get(TString::Format("h1_dqdxVSddist_n_%d_plane_%d",n,ip));
@@ -111,13 +130,14 @@ void plot() {
       h1_dqdxVSddist_tpc1[ip][n] = (TH1F*)input->Get(TString::Format("h1_dqdxVSddist_tpc1_n_%d_plane_%d",n,ip));
       h1_dqdxVShpeaktime_tpc0[ip][n] = (TH1F*)input->Get(TString::Format("h1_dqdxVSpeaktime_tpc0_n_%d_plane_%d",n,ip));
       h1_dqdxVShpeaktime_tpc1[ip][n] = (TH1F*)input->Get(TString::Format("h1_dqdxVSpeaktime_tpc1_n_%d_plane_%d",n,ip));
+      h1_dqdxVShpeaktime_tpc01[ip][n] = (TH1F*)input->Get(TString::Format("h1_dqdxVSpeaktime_n_%d_plane_%d",n,ip));
     }
   }
 
   ////////////////////////////////////////////////
   //NTracks
   TCanvas *c1_h1_ntrks_loop = new TCanvas("c1_h1_ntrks_loop", "c1_h1_ntrks_loop", 1200, 800);
-  h1_ntrks_loop->GetXaxis()->SetRangeUser(0,15);
+  h1_ntrks_loop->GetXaxis()->SetRangeUser(0,30);
   h1_ntrks_loop->GetXaxis()->SetTitle("Loop Number");
   h1_ntrks_loop->GetYaxis()->SetTitle("Number of Tracks per Loop");
   h1_ntrks_loop->SetStats(0);
@@ -130,8 +150,14 @@ void plot() {
   h2_trk_startX_startY->SetStats(0);
   c1_h2_trk_startX_startY->SaveAs(Form("%sh2_trk_startX_startY.pdf",plotdir.Data()));
   
-  //h2_dqdxhitpeakt_plane_2-
+  //X start vs Y start Selected
+  TCanvas *c1_h2_trk_startX_startY_selected = new TCanvas("c1_h2_trk_startX_startY_selected", "c1_h2_trk_startX_startY_selected", 1200, 800);
+  h2_trk_startX_startY_selected->Draw("COLZ");
+  h2_trk_startX_startY_selected->SetStats(0);
+  c1_h2_trk_startX_startY_selected->SaveAs(Form("%sh2_trk_startX_startY_selected.pdf",plotdir.Data()));
 
+  //h2_dqdxhitpeakt_plane_2-
+/*
   TCanvas *c1_h2_dqdxhitpeakt_plane_2 = new TCanvas("c1_h2_dqdxhitpeakt_plane_2", "c1_h2_dqdxhitpeakt_plane_2", 1200, 800);
   h2_dqdxhitpeakt_plane_2->Draw("COLZ");
   h2_dqdxhitpeakt_plane_2->SetStats(0);
@@ -145,15 +171,90 @@ void plot() {
 
   double errortlife = tlifetime*(-1)*errormt/mt;
   cout <<  "FOR h2_dqdxhitpeakt_plane_2 " << Form("Electron Liftime is: %f +- %f",tlifetime,errortlife) << endl;
-  //TText* tlifetime_text = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
-  //tlifetime_text->Draw("same");
-  h2_dqdxhitpeakt_plane_2->SetTitle("Run 4 - Plane 2");
+  TText* tlifetime_text = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+  tlifetime_text->Draw("same");
+  h2_dqdxhitpeakt_plane_2->SetTitle(Form("Run %s - Plane 2",RUNNUM.Data()));
   c1_h2_dqdxhitpeakt_plane_2->SaveAs(Form("%sh2_dqdxhitpeakt_plane_2.pdf",plotdir.Data()));
+*/
 
+  double mt, errormt, tlifetime, errortlife;
+  for (int p = 2; p < 3; ++p){
 
+      TCanvas *c1_h2_dqdxhitpeakt_tpc01 = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc01_plane_%d",p), Form("c1_h2_dqdxhitpeakt_tpc01_plane_%d",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc01[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc01[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc01[p]->Fit("expo","","",10,180);
+      TF1 *exp01 = (TF1*)h2_dqdxhitpeakt_tpc01[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp01->GetParameter(1)); errormt = exp01->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+
+      TText* tlifetime_text01 = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text01->Draw("same");
+      h2_dqdxhitpeakt_tpc01[p]->SetTitle(Form("Run %s - TPC 01 - Plane %d",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc01->SaveAs(Form("%sh2_dqdxhitpeakt_tpc01_plane_%d.pdf",plotdir.Data(),p));
+
+      TCanvas *c1_h2_dqdxhitpeakt_tpc0 = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc0_plane_%d",p), Form("c1_h2_dqdxhitpeakt_tpc0_plane_%d",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc0[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc0[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc0[p]->Fit("expo","","",10,180);
+      TF1 *exp0 = (TF1*)h2_dqdxhitpeakt_tpc0[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp0->GetParameter(1)); errormt = exp0->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+      TText* tlifetime_text0 = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text0->Draw("same");
+      h2_dqdxhitpeakt_tpc0[p]->SetTitle(Form("Run %s - TPC 0 - Plane %d",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc0->SaveAs(Form("%sh2_dqdxhitpeakt_tpc0_plane_%d.pdf",plotdir.Data(),p));
+
+      TCanvas *c1_h2_dqdxhitpeakt_tpc1 = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc1_plane_%d",p), Form("c1_h2_dqdxhitpeakt_tpc1_plane_%d",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc1[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc1[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc1[p]->Fit("expo","","",10,180);
+      TF1 *exp1 = (TF1*)h2_dqdxhitpeakt_tpc1[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp1->GetParameter(1)); errormt = exp1->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+      TText* tlifetime_text1 = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text1->Draw("same");
+      h2_dqdxhitpeakt_tpc1[p]->SetTitle(Form("Run %s - TPC 1 - Plane %d",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc1->SaveAs(Form("%sh2_dqdxhitpeakt_tpc1_plane_%d.pdf",plotdir.Data(),p));
+
+      //Truncated Mean
+
+      TCanvas *c1_h2_dqdxhitpeakt_tpc01_trunc = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc01_plane_%d_trunc",p), Form("c1_h2_dqdxhitpeakt_tpc01_plane_%d_trunc",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc01_trunc[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc01_trunc[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc01_trunc[p]->Fit("expo","","",10,180);
+      TF1 *exp01_trunc = (TF1*)h2_dqdxhitpeakt_tpc01_trunc[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp01_trunc->GetParameter(1)); errormt = exp01_trunc->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+      TText* tlifetime_text01_trunc = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text01_trunc->Draw("same");
+      h2_dqdxhitpeakt_tpc01_trunc[p]->SetTitle(Form("Run %s - TPC 01 - Plane %d Truncated",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc01_trunc->SaveAs(Form("%sh2_dqdxhitpeakt_tpc01_plane_%d_trunc.pdf",plotdir.Data(),p));
+
+      TCanvas *c1_h2_dqdxhitpeakt_tpc0_trunc = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc0_plane_%d_trunc",p), Form("c1_h2_dqdxhitpeakt_tpc0_plane_%d_trunc",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc0_trunc[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc0_trunc[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc0_trunc[p]->Fit("expo","","",10,180);
+      TF1 *exp0_trunc = (TF1*)h2_dqdxhitpeakt_tpc0_trunc[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp0_trunc->GetParameter(1)); errormt = exp0_trunc->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+      TText* tlifetime_text0_trunc = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text0_trunc->Draw("same");
+      h2_dqdxhitpeakt_tpc0_trunc[p]->SetTitle(Form("Run %s - TPC 0 - Plane %d - Truncated",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc0_trunc->SaveAs(Form("%sh2_dqdxhitpeakt_tpc0_plane_%d_trunc.pdf",plotdir.Data(),p));
+
+      TCanvas *c1_h2_dqdxhitpeakt_tpc1_trunc = new TCanvas(Form("c1_h2_dqdxhitpeakt_tpc1_plane_%d_trunc",p), Form("c1_h2_dqdxhitpeakt_tpc1_plane_%d_trunc",p), 1200, 800);
+      h2_dqdxhitpeakt_tpc1_trunc[p]->Draw("COLZ");
+      h2_dqdxhitpeakt_tpc1_trunc[p]->SetStats(0);
+      h2_dqdxhitpeakt_tpc1_trunc[p]->Fit("expo","","",10,180);
+      TF1 *exp1_trunc = (TF1*)h2_dqdxhitpeakt_tpc1_trunc[p]->GetListOfFunctions()->FindObject("expo");
+      mt = (exp1_trunc->GetParameter(1)); errormt = exp1_trunc->GetParError(1); tlifetime = -(1/mt); errortlife = tlifetime*(-1)*errormt/mt;
+      TText* tlifetime_text1_trunc = new TText(.5,.6,Form("Electron Liftime is: %f +- %f",tlifetime,errortlife));
+      tlifetime_text1_trunc->Draw("same");
+      h2_dqdxhitpeakt_tpc1_trunc[p]->SetTitle(Form("Run %s - TPC 1 - Plane %d - Truncated",RUNNUM.Data(),p));
+      c1_h2_dqdxhitpeakt_tpc1_trunc->SaveAs(Form("%sh2_dqdxhitpeakt_tpc1_plane_%d_trunc.pdf",plotdir.Data(),p));
+      
+
+  }
+/*
   for (size_t tpc = 0; tpc < 2; ++tpc){
     TH2F *h2_dqdxhitpeakt_tpc_plane_2 = (TH2F*)input->Get(Form("h2_dqdxhitpeakt_tpc%d_plane_2",(int)tpc));
-    h2_dqdxhitpeakt_tpc_plane_2->SetTitle(Form("TPC%d - Run 3 - Plane 2",(int)tpc));
+    h2_dqdxhitpeakt_tpc_plane_2->SetTitle(Form("TPC%d - Run %s - Plane 2",(int)tpc, RUNNUM.Data()));
     TCanvas *c1_h2_dqdxhitpeakt_tpc_plane_2 = new TCanvas("c1_h2_dqdxhitpeakt_tpc_plane_2", "c1_h2_dqdxhitpeakt_tpc_plane_2", 1200, 800);
     h2_dqdxhitpeakt_tpc_plane_2->Draw("COLZ");
     h2_dqdxhitpeakt_tpc_plane_2->SetStats(0);
@@ -169,7 +270,7 @@ void plot() {
     
     c1_h2_dqdxhitpeakt_tpc_plane_2->SaveAs(Form("%sh2_dqdxhitpeakt_tpc%d_plane_2.pdf",plotdir.Data(),(int)tpc));
   }
-
+*/
 
   // track start and end
   TCanvas *c1_start_end = new TCanvas("c1_start_end", "c1_start_end", 1200, 800);
@@ -253,7 +354,7 @@ void plot() {
   TCanvas *c1_len = new TCanvas("c1_len", "c1_len", 800, 600);
   //gPad->SetLogy();
   h1_trk_len->Draw();
-  c1_len->SaveAs("track_length.pdf");
+  c1_len->SaveAs(Form("%strack_length.pdf",plotdir.Data()));
 
   // track angle
   TCanvas *c1_theta = new TCanvas("c1_theta", "c1_theta", 1200, 600);
@@ -389,6 +490,7 @@ void plot() {
 
   TCanvas *c1_dqdxVShpeaktime_tpc0[3][nplots];
   TCanvas *c1_dqdxVShpeaktime_tpc1[3][nplots];
+  TCanvas *c1_dqdxVShpeaktime_tpc01[3][nplots];
   for (int n = 0; n < nplots; ++n){
     for (int ip = 0; ip < 3; ++ip){
       if(ip != 2) continue;
@@ -399,7 +501,7 @@ void plot() {
       
       //TF1 *gfit = (TF1 *)h1_dqdxVSddist[ip][n]->GetFunction("expo");
       //TF1 *fit = h1_dqdxVSddist[ip][n]->GetFunction(function_name)
-      h1_dqdxVShpeaktime_tpc0[ip][n]->Fit("expo","Q","",10,180);
+      h1_dqdxVShpeaktime_tpc0[ip][n]->Fit("expo","Q","",fitrange[0],fitrange[1]);
       TF1 *exp = (TF1*)h1_dqdxVShpeaktime_tpc0[ip][n]->GetListOfFunctions()->FindObject("expo");
       
       
@@ -419,7 +521,7 @@ void plot() {
         TText* taut = new TText(.5,.6,Form(" Electron Liftime is: %f",tau0));
         taut->Draw("same");
       }
-      h1_dqdxVShpeaktime_tpc0[ip][n]->SetTitle(Form("Run 3 TPC0 Plane2 n=%d",n));
+      h1_dqdxVShpeaktime_tpc0[ip][n]->SetTitle(Form("Run %s - TPC0 - Plane2 n=%d",RUNNUM.Data(), n));
       c1_dqdxVShpeaktime_tpc0[ip][n]->SaveAs(TString::Format("%sh1_dqdxVShpeaktime_tpc0_n_%d_plane_%d.pdf",plotdir.Data(),n,ip));
 
     }
@@ -434,7 +536,7 @@ void plot() {
       
       //TF1 *gfit = (TF1 *)h1_dqdxVSddist[ip][n]->GetFunction("expo");
       //TF1 *fit = h1_dqdxVSddist[ip][n]->GetFunction(function_name)
-      h1_dqdxVShpeaktime_tpc1[ip][n]->Fit("expo","Q","",10,180);
+      h1_dqdxVShpeaktime_tpc1[ip][n]->Fit("expo","Q","",fitrange[0],fitrange[1]);
       TF1 *exp = (TF1*)h1_dqdxVShpeaktime_tpc1[ip][n]->GetListOfFunctions()->FindObject("expo");
       
       
@@ -455,8 +557,44 @@ void plot() {
         TText* taut = new TText(.5,.6,Form(" Electron Liftime is: %f +- %f",tau1,er));
         taut->Draw("same");
       }
-      h1_dqdxVShpeaktime_tpc1[ip][n]->SetTitle(Form("Run 4 Plane2 n=%d",n));
+      h1_dqdxVShpeaktime_tpc1[ip][n]->SetTitle(Form("Run %s - TPC1 - Plane2 n=%d",RUNNUM.Data(),n));
       c1_dqdxVShpeaktime_tpc1[ip][n]->SaveAs(TString::Format("%sh1_dqdxVShpeaktime_tpc1_n_%d_plane_%d.pdf",plotdir.Data(),n,ip));
+
+    }
+  }
+  for (int n = 0; n < nplots; ++n){
+    for (int ip = 0; ip < 3; ++ip){
+      if(ip != 2) continue;
+      if(!(h1_dqdxVShpeaktime_tpc01[ip][n])) continue;
+      if(h1_dqdxVShpeaktime_tpc01[ip][n]->GetEntries() == 0) continue;
+      c1_dqdxVShpeaktime_tpc01[ip][n] = new TCanvas(TString::Format("h1_dqdxVShpeaktime_tpc01_n_%d_plane_%d",n,ip), TString::Format("h1_dqdxVShpeaktime_tpc01_n_%d_plane_%d",n,ip), 800, 600);
+      //TF1 *f1 = new TF1("f1","expo",-40,0);
+      
+      //TF1 *gfit = (TF1 *)h1_dqdxVSddist[ip][n]->GetFunction("expo");
+      //TF1 *fit = h1_dqdxVSddist[ip][n]->GetFunction(function_name)
+      h1_dqdxVShpeaktime_tpc01[ip][n]->Fit("expo","Q","",fitrange[0],fitrange[1]);
+      TF1 *exp = (TF1*)h1_dqdxVShpeaktime_tpc01[ip][n]->GetListOfFunctions()->FindObject("expo");
+      
+      
+      //exp->SetLineColor(5);
+      //exp->SetLineStyle(2);
+      h1_dqdxVShpeaktime_tpc01[ip][n]->Draw("hist E");
+      
+      if(exp){
+        //cout<<"fitting f(x) = exp(p0+p1*x)"<<endl;
+        //cout<<"p0: "<< exp->GetParameter(0)<<endl;
+        //cout<<"p1: "<< exp->GetParameter(1)<<endl;
+        //cout<<""<<endl;
+        m = (exp->GetParameter(1));
+        tau1 = -(1/m);
+        //cout << "TPC1: Electron Liftime is: " << tau1 << " us on plane: " << ip << endl;
+        exp->Draw("same");
+        double er = pow(tau1,2)*exp->GetParError(1);
+        TText* taut = new TText(.5,.6,Form(" Electron Liftime is: %f #pm %f",tau1,er));
+        taut->Draw("same");
+      }
+      h1_dqdxVShpeaktime_tpc01[ip][n]->SetTitle(Form("Run %s - TPC 01 - Plane2 n=%d",RUNNUM.Data(),n));
+      c1_dqdxVShpeaktime_tpc01[ip][n]->SaveAs(TString::Format("%sh1_dqdxVShpeaktime_tpc01_n_%d_plane_%d.pdf",plotdir.Data(),n,ip));
 
     }
   }
@@ -473,10 +611,16 @@ void plot() {
   graph_eLifeVSRun_tpc1_plane2->SaveAs(TString::Format("%seLifeVSRun_tpc1_plane2.pdf",plotdir.Data()));
 
   TCanvas* graph_eLifeVSRun_tpc01_plane2 = new TCanvas("graph_eLifeVSRun_tpc01_plane2","graph_eLifeVSRun_tpc01_plane2",800, 600);
-  g1_eLifeVSRun_tpc01_plane2->Draw("A*");
-  g1_eLifeVSRun_tpc01_plane2->GetYaxis()->SetRangeUser(0,120);
+  g1_eLifeVSRun_tpc01_plane2->SetTitle(Form("Run %s Electron Lifetime - Plane 2",RUNNUM.Data()));
+  g1_eLifeVSRun_tpc01_plane2->SetMarkerStyle(11);
+  g1_eLifeVSRun_tpc01_plane2->Draw("AP");
+
+  //g1_eLifeVSRun_tpc01_plane2->GetYaxis()->SetRangeUser(0,2600);
+  //g1_eLifeVSRun_tpc01_plane2->GetXaxis()->SetRangeUser(6000,7000);
   graph_eLifeVSRun_tpc01_plane2->SaveAs(TString::Format("%seLifeVSRun_tpc01_plane2.pdf",plotdir.Data()));
   
+
+
 
 }
 

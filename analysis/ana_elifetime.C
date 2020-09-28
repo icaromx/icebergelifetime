@@ -4,8 +4,8 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 
-const int kMaxEvent = 5000000;
-const int kLoopEvent = 500; // per loop
+const int kMaxEvent = 1000000;
+const int kLoopEvent = 1000; // per loop
 
 void ana_elifetime::Loop()
 {
@@ -158,11 +158,12 @@ void ana_elifetime::Loop()
 
   TH1F* h1_dqdx[3];
   TH2F* h2_dqdxtime[3];
-  TH2F* h2_dqdxhitpeakt[3];
+  TH2F* h2_dqdxhitpeakt_tpc01[3];
   TH2F* h2_dqdxhitpeakt_tpc0[3];
   TH2F* h2_dqdxhitpeakt_tpc1[3];
   TH2F* h2_dqdxhitpeakt_tpc0_trunc[3];
   TH2F* h2_dqdxhitpeakt_tpc1_trunc[3];
+  TH2F* h2_dqdxhitpeakt_tpc01_trunc[3];
   TH2F* h2_dqdxX[3];
   TH2F* h2_dqdxX_tpc0[3];
   TH2F* h2_dqdxX_tpc1[3];
@@ -176,16 +177,20 @@ void ana_elifetime::Loop()
 
     h1_dqdx[p] = new TH1F(TString::Format("h1_dqdx_plane_%d",p), "; dQ/dx [ADC/cm]; Counts [#]", nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxtime[p] = new TH2F(TString::Format("h2_dqdxtime_plane_%d",p), "; Drift time [#mus]; dQ/dx [ADC/cm]", nbin_time, lbin_time, hbin_time, nbin_dqdx, lbin_dqdx, hbin_dqdx);
-    h2_dqdxhitpeakt[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
+    h2_dqdxhitpeakt_tpc01[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc01_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc0[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc0_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc1[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc1_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc0_trunc[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc0_plane_%d_trunc",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc1_trunc[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc1_plane_%d_trunc",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
+    h2_dqdxhitpeakt_tpc01_trunc[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc01_plane_%d_trunc",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxX[p] = new TH2F(TString::Format("h2_dqdxX_plane_%d",p), "; Drift Distance [cm]; dQ/dx [ADC/cm]", nbin_x, lbin_x, hbin_x, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxX_tpc0[p] = new TH2F(TString::Format("h2_dqdxX_tpc0_plane_%d",p), "; Drift Distance [cm]; dQ/dx [ADC/cm]", nbin_x, lbin_x, hbin_x, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxX_tpc1[p] = new TH2F(TString::Format("h2_dqdxX_tpc1_plane_%d",p), "; Drift Distance [cm]; dQ/dx [ADC/cm]", nbin_x, lbin_x, hbin_x, nbin_dqdx, lbin_dqdx, hbin_dqdx);
 
     hp2d_angle_dqdx[p] = new TProfile2D(TString::Format("hp2d_angle_dqdx_plane_%d",p), TString::Format("Plane %d; #theta_{xz} [deg]; #theta_{yz} [deg]", p), nbin_trk_thetaxz, lbin_trk_thetaxz, hbin_trk_thetaxz, nbin_trk_thetayz, lbin_trk_thetayz, hbin_trk_thetayz);
+
+
+
   }
    if (fChain == 0) return;
 
@@ -232,7 +237,10 @@ void ana_elifetime::Loop()
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       
       if(ntrks == 0) continue;//consider only events with tracks
-
+      //if(run < 6400 || run > 6781) continue;
+      //if(run < 6044 ) continue;
+      //if(run < 6781 ) continue;
+      //if(run < 6400) continue;
       double med0 = 0., error0 = 0.;
       double med1 = 0., error1 = 0.;
       double med01 = 0., error01 = 0.;
@@ -417,7 +425,7 @@ void ana_elifetime::Loop()
             pair<float, float> temp_hpt_dqdx;
 	          h1_dqdx[ip]->Fill(trkdqdx[i][ip][jj]);
 	          h2_dqdxtime[ip]->Fill(trkt[i][ip][jj], trkdqdx[i][ip][jj]);
-            h2_dqdxhitpeakt[ip]->Fill(trkhitpeakt[i][ip][jj], trkdqdx[i][ip][jj]);
+            h2_dqdxhitpeakt_tpc01[ip]->Fill(trkhitpeakt[i][ip][jj], trkdqdx[i][ip][jj]);
             
             h2_dqdxX[ip]->Fill(trkx[i][ip][jj], trkdqdx[i][ip][jj]);
 
@@ -464,12 +472,11 @@ void ana_elifetime::Loop()
             if(intpc == 0) h2_dqdxhitpeakt_tpc0_trunc[ip]->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
             if(intpc == 1) h2_dqdxhitpeakt_tpc1_trunc[ip]->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
             h2_dqdxhitpeakt_allplanes_trunc->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
+            h2_dqdxhitpeakt_tpc01_trunc[ip]->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
           }
           hpt_dqdx_v.clear();
   	    }//loop over ip
         
-
-
       }
       runs[nplot] = run;
       if(eventNum > kMaxEvent) break;
@@ -504,7 +511,7 @@ void ana_elifetime::Loop()
      h1_ntrks_loop_1->SetBinContent(loop,ntrks1_v[loop]);
    }
 
-  //double vd = 0.156461; // cm/us
+  double fitrange[2] = {30, 150};
   double m0 = 0, tau0 = 0;
   std::vector<pair < int, double> > run_elife_tpc0_plane2_v;
   for (size_t plot = 0; plot < maxplots; ++plot){
@@ -513,7 +520,7 @@ void ana_elifetime::Loop()
       if(ip != 2) continue;
       if(!(h1_dqdxVShpeaktime_tpc0[plot][ip])) continue;
       if(h1_dqdxVShpeaktime_tpc0[plot][ip]->GetEntries() == 0) continue;
-      h1_dqdxVShpeaktime_tpc0[plot][ip]->Fit("expo","Q0","",10,180);
+      h1_dqdxVShpeaktime_tpc0[plot][ip]->Fit("expo","Q0","",fitrange[0],fitrange[1]);
       
       TF1 *exp = (TF1*)h1_dqdxVShpeaktime_tpc0[plot][ip]->GetListOfFunctions()->FindObject("expo");
       if(exp){
@@ -557,7 +564,7 @@ void ana_elifetime::Loop()
       if(ip != 2) continue;
       if(!(h1_dqdxVShpeaktime_tpc1[plot][ip])) continue;
       if(h1_dqdxVShpeaktime_tpc1[plot][ip]->GetEntries() == 0) continue;
-      h1_dqdxVShpeaktime_tpc1[plot][ip]->Fit("expo","Q0","",10,180);
+      h1_dqdxVShpeaktime_tpc1[plot][ip]->Fit("expo","Q0","",fitrange[0],fitrange[1]);
       
       TF1 *exp = (TF1*)h1_dqdxVShpeaktime_tpc1[plot][ip]->GetListOfFunctions()->FindObject("expo");
       if(exp){
@@ -593,9 +600,6 @@ void ana_elifetime::Loop()
 
   g1_eLifeVSRun_tpc1_plane2->Write();
 
-
-
-
   double m01 = 0, tau01 = 0;
   std::vector<pair < int, double> > run_elife_tpc01_plane2_v;
   std::vector<double> error01_v;
@@ -605,7 +609,7 @@ void ana_elifetime::Loop()
       if(ip != 2) continue;
       if(!(h1_dqdxVShpeaktime[plot][ip])) continue;
       if(h1_dqdxVShpeaktime[plot][ip]->GetEntries() == 0) continue;
-      h1_dqdxVShpeaktime[plot][ip]->Fit("expo","Q0","",10,180);
+      h1_dqdxVShpeaktime[plot][ip]->Fit("expo","Q0","",fitrange[0],fitrange[1]);
       
       TF1 *exp = (TF1*)h1_dqdxVShpeaktime[plot][ip]->GetListOfFunctions()->FindObject("expo");
       if(exp){
@@ -636,7 +640,7 @@ void ana_elifetime::Loop()
   }
   TGraphErrors* g1_eLifeVSRun_tpc01_plane2 = new TGraphErrors(nplots01,runr01,life01,zeros,error_elife01);
   g1_eLifeVSRun_tpc01_plane2->SetName("g1_eLifeVSRun_tpc01_plane2");
-  g1_eLifeVSRun_tpc01_plane2->SetTitle("Run 3 Electron Lifetime - Plane 2");
+  //g1_eLifeVSRun_tpc01_plane2->SetTitle("Run 3 Electron Lifetime - Plane 2");
   g1_eLifeVSRun_tpc01_plane2->GetXaxis()->SetTitle("Run Number");
   g1_eLifeVSRun_tpc01_plane2->GetYaxis()->SetTitle("Electron Lifetime [#mus]");
   //gr->Draw("A*");

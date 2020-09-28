@@ -77,7 +77,7 @@ public :
    //TBranch        *b_trkhitz;   //!
    TBranch        *b_nplane;   //!
 
-   ana_elifetime(TTree *tree=0);
+   ana_elifetime(/*TTree *tree=0,*/ TString filename);
    virtual ~ana_elifetime();
    virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
@@ -93,20 +93,23 @@ public :
 #endif
 
 #ifdef ana_elifetime_cxx
-ana_elifetime::ana_elifetime(TTree *tree) : fChain(0) 
+ana_elifetime::ana_elifetime( TString filename) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
-   if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("icebergelifetime.root");
-      if (!f || !f->IsOpen()) {
-         f = new TFile("icebergelifetime.root");
-      }
-      TDirectory * dir = (TDirectory*)f->Get("icebergelifetime.root:/iceberglifetime");
-      dir->GetObject("Event",tree);
-
+   TTree *tree=0;
+   
+   TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(Form("%s.root",filename.Data()));
+   if (!f || !f->IsOpen()) {
+      f = new TFile(Form("%s.root",filename.Data()));
    }
+   TDirectory * dir = (TDirectory*)f->Get(Form("%s.root:/icebergelifetime",filename.Data()));
+   cout << "dir = " << dir << endl;
+   cout << Form("%s.root:icebergelifetime",filename.Data()) << endl;
+   dir->GetObject("Event",tree);
+
    Init(tree);
+   Loop();
 }
 
 ana_elifetime::~ana_elifetime()
@@ -230,7 +233,7 @@ std::vector< pair<float, float> > ana_elifetime::Truncate(std::vector< pair<floa
    
 
    size_t vectSize = vect.size();
-   float redvectsizeby = (float) vectSize*0.15;
+   float redvectsizeby = (float) vectSize*0.25;
    
    size_t newvectsize = vectSize - (size_t)redvectsizeby;
    size_t startat = (size_t) (redvectsizeby/2.);
