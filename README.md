@@ -1,9 +1,11 @@
 # icebergelifetime
-_Modified: Sep 9, 2020_
+_Modified: Sep 28, 2020_
 
 ## Intended use
 
-This code is to be used for the calculation of the electron lifetime at the ICEBERG test stand.
+This code is to be used for the calculation of the electron lifetime at the ICEBERG test stand. There are two components to this code, one to create the ntuples to be used for doing the analysis. This involves using decoded iceberg files that include the calorimetry and track reconstruction data products.
+
+The second component is the actual analysis where the lifetime is calculated
 
 The code contains a LArSoft analyser module to be used to create a common ntuple(s) for the electron lifetime studies.
 
@@ -24,7 +26,7 @@ mrbsetenv
 mrb i
 ```
 
-## Test/run
+## Creating the Ntuples
 
 ```
 # in a fresh shell
@@ -42,6 +44,13 @@ cd work
 MYFILE=/dune/data/users/icaro/Testfiles/iceberg_r005040_sr01_20200310T102105_1_dl1_reco.root
 
 lar -c icebergelifetime.fcl --no-output $MYFILE
+```
+
+## Doing an Analysis
+
+```
+# copy and source setup.sh in the desired directory where the analysis will be done
+
 ```
 
 ### Note
