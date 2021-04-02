@@ -208,12 +208,12 @@ void icebergelifetime::analyze(art::Event const& e)
   art::FindManyP<anab::Calorimetry> fmtrkcalo(trackListHandle, e, fCalorimetryModuleLabel);
   art::FindManyP<recob::Hit, recob::TrackHitMeta> fmhittrkmeta(trackListHandle, e, fTrackModuleLabel);
   
-  auto const *detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
+  //auto const *detprop = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
   ntrks = 0;
   for (const auto& trk : tracklist) {
     if(ntrks >= kMaxTracks) break;
-    vdrift = detprop->DriftVelocity()*1e-3;
+    vdrift = 0.148/1000.; //detprop->DriftVelocity()*1e-3;
     trkid[ntrks] = trk->ID();
     trklen[ntrks] = trk->Length();
     trkphi[ntrks] = trk->Phi();
@@ -284,8 +284,8 @@ void icebergelifetime::analyze(art::Event const& e)
           
           trkxNoCorr[ntrks][planenum][iHit] = TrkPos1.X();
           double x = TrkPos1.X() - minx; //subtract the minx to get correct t0
-          double XDriftVelocity = detprop->DriftVelocity()*1e-3; //cm/ns
-          //XDriftVelocity = 0.148/1000. ; //OVERWRITE for lartpc at 92% nominal field; ONLY RUN4
+          double XDriftVelocity;// = detprop->DriftVelocity()*1e-3; //cm/ns
+          XDriftVelocity = 0.148/1000. ; //OVERWRITE for lartpc at 92% nominal field; ONLY RUN4
           double t = x/(XDriftVelocity*1000); //change the velocity units from cm/ns to cm/us
           trkx[ntrks][planenum][iHit] = x;
           trkt[ntrks][planenum][iHit] = t;
