@@ -1,5 +1,5 @@
 # icebergelifetime
-_Modified: Sep 28, 2020_
+_Modified: Apr 5, 2021_
 
 ## Intended use
 
@@ -18,7 +18,7 @@ This code is a seperate package from dunetpc for the sake of ease of use, but it
 mkdir testdev # use any name you desire
 cd testdev/
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
-setup dunetpc v08_62_00 -q e19:prof # or whatever version of dunetpc we are on
+setup dunetpc v09_17_01 -q e19:prof # or whatever version of dunetpc we are on
 mrb newDev
 . localProducts_larsoft_*/setup
 mrb g https://github.com/icaromx/icebergelifetime
@@ -34,7 +34,7 @@ mrb i
 cd testdev
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
-setup dunetpc v08_62_00 -q e19:prof #or whatever version of dunetpc you used
+setup dunetpc v09_17_01 -q e19:prof #or whatever version of dunetpc you used
 . localProducts_larsoft_*/setup
 mrbslp
 
