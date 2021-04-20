@@ -273,7 +273,6 @@ void icebergelifetime::analyze(art::Event const& e)
           }
         }// End loop hits
         t0[ntrks][planenum] = (float) minpht;
-        cout << "minpht = " << minpht << endl;
         trkminx[ntrks][planenum] = (float) minx;
         
         for(size_t iHit = 0; iHit < NHits; ++iHit) {

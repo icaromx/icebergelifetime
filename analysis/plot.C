@@ -34,6 +34,9 @@ void plot(TString FILENAME, TString RUNNUM) {
   TH1F *h1_trk_endy = (TH1F*)input->Get("h1_trk_endy");
   TH1F *h1_trk_endz = (TH1F*)input->Get("h1_trk_endz");
 
+  TH1F *h1_t0 = (TH1F*)input->Get("h1_t0");
+  TH1F *h1_t0_selected = (TH1F*)input->Get("h1_t0_selected");
+
 
   TH1F *h1_trk_startx_selected = (TH1F*)input->Get("h1_trk_startx_selected");
   TH1F *h1_trk_starty_selected = (TH1F*)input->Get("h1_trk_starty_selected");
@@ -164,6 +167,20 @@ void plot(TString FILENAME, TString RUNNUM) {
   h1_ntrks_loop->SetStats(0);
   h1_ntrks_loop->Draw("HIST");
   c1_h1_ntrks_loop->SaveAs(Form("%sh1_ntrks_loop.pdf",plotdir.Data()));
+
+  TCanvas *c1_h1_t0 = new TCanvas("c1_h1_t0", "c1_h1_t0", 1200, 800);
+  h1_t0->GetXaxis()->SetRangeUser(0,600);
+  h1_t0->GetXaxis()->SetTitle("t0 [#mus]");
+  h1_t0->SetStats(0);
+  h1_t0->Draw("HIST");
+  c1_h1_t0->SaveAs(Form("%sh1_t0.pdf",plotdir.Data()));
+
+  TCanvas *c1_h1_t0_selected = new TCanvas("c1_h1_t0_selected", "c1_h1_t0", 1200, 800);
+  h1_t0_selected->GetXaxis()->SetRangeUser(0,600);
+  h1_t0_selected->GetXaxis()->SetTitle("Min Peaktime [#mus]");
+  h1_t0_selected->SetStats(0);
+  h1_t0_selected->Draw("HIST");
+  c1_h1_t0_selected->SaveAs(Form("%sh1_t0_selected.pdf",plotdir.Data()));
 
   //X start vs Y start
   TCanvas *c1_h2_trk_startX_startY = new TCanvas("c1_h2_trk_startX_startY", "c1_h2_trk_startX_startY", 1200, 800);
