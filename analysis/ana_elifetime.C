@@ -252,7 +252,7 @@ void ana_elifetime::Loop()
       
       if(ntrks == 0) continue;//consider only events with tracks
   
-      if((run < 8898 || run > 8949) && (run < 9613 || run > 9745) && (run < 9358 || run > 9400)) continue;
+      //if((run < 8898 || run > 8949) && (run < 9613 || run > 9745) && (run < 9358 || run > 9400)) continue;
       //if((run < 9358 || run > 9400)) continue;
       
       //if((run < 8898 || run > 8949)) continue;
