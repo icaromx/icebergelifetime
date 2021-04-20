@@ -1,10 +1,10 @@
-VERSION=v09_17_01
+VERSION=v09_20_00
 QUAL=e19
-AREA=dev_icebergelifetime
-WORKSPACE=/dune/app/users/$USER/dev_areas/$AREA/dev
+AREA=`pwd`
+DEV_AREA=$AREA/dev
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 setup dunetpc $VERSION -q ${QUAL}:prof
-cd $WORKSPACE
+cd $DEV_AREA
 source localProducts_larsoft_${VERSION}_${QUAL}_prof/setup
 #setup ninja v1_8_2
 mrbsetenv
@@ -13,13 +13,8 @@ mrbsetenv
 #in the future, you need build with ninja if you modified the source files
 # setup local products: slp
 mrbslp
-cd -
-#echo 'working at: ' $WORKSPACE
-#whenever you want to compile do the following
-#cd $MRB_BUILDDIR
-#ninja install
-#x509 and grid proxy
-#setup_fnal_security
+cd ..
+echo 'working at: ' $AREA
 
 export ANALYSIS_SCRIPTS=$MRB_SOURCE/icebergelifetime/analysis/
 
