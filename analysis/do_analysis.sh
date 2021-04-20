@@ -4,7 +4,7 @@ export ANALYSIS_DIR=`pwd`
 echo $ANALYSIS_DIR
 mkdir $ANALYSIS_DIR/Plots
 
-RUN='4'
+RUN='5'
 
 export FILENAME=$ANALYSIS_DIR/icebergelifetime
 

@@ -1,10 +1,9 @@
 #include "services_dune.fcl"
 #include "IcebergRawDecoder.fcl"
 #include "IcebergDataInterfaceTool.fcl"
-#include "channelstatus_iceberg.fcl"
 #include "hitfindermodules_dune.fcl"
 #include "trackfindermodules_dune.fcl"
-#include "channelstatus_iceberg.fcl"
+#include "channelstatus_iceberg5.fcl"
 
 process_name: icebergelifetime
 
@@ -63,8 +62,8 @@ physics:
 #services.SpaceCharge.EnableSimulationSCE: true
 
 # channel status service (service_provider should be specified)
-services.ChannelStatusService.BadChannels: @local::iceberg_bad_channels
-services.ChannelStatusService.NoisyChannels: @local::iceberg_noisy_channels
+services.ChannelStatusService.BadChannels: @local::data.iceberg5_bad_channels
+services.ChannelStatusService.NoisyChannels: @local::data.iceberg5_noisy_channels
 services.ChannelStatusService.service_provider: "SimpleChannelStatusService"
 
 services.DetectorClocksService:        @local::dunefd_detectorclocks

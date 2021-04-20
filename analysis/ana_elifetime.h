@@ -44,6 +44,7 @@ public :
    Float_t         trkhitpeakt[627][3][1000];   //[ntrks]
    Float_t         trkx[627][3][1000];   //[ntrks]
    Float_t         trkt[627][3][1000];   //[ntrks]
+   Float_t         t0[627][3];   //[ntrks]
    //Double_t        trkhitx[627][3][1000];   //[ntrks]
    //Double_t        trkhity[627][3][1000];   //[ntrks]
    //Double_t        trkhitz[627][3][1000];   //[ntrks]
@@ -62,6 +63,7 @@ public :
    TBranch        *b_trkend;   //!
    TBranch        *b_trklen;   //!
    TBranch        *b_trkphi;   //!
+   TBranch        *b_t0;   //!
    TBranch        *b_trktheta;   //!
    TBranch        *b_trkthetaxz;   //!
    TBranch        *b_trkthetayz;   //!
@@ -172,6 +174,7 @@ void ana_elifetime::Init(TTree *tree)
    fChain->SetBranchAddress("trkendcosxyz", trkendcosxyz, &b_trkendcosxyz);
    fChain->SetBranchAddress("ntrkhits", ntrkhits, &b_ntrkhits);
    fChain->SetBranchAddress("trkdqdx", trkdqdx, &b_trkdqdx);
+   fChain->SetBranchAddress("t0", t0, &b_t0);
    fChain->SetBranchAddress("trkhitpeakt", trkhitpeakt, &b_trkhitpeakt);
    fChain->SetBranchAddress("trkx", trkx, &b_trkx);
    fChain->SetBranchAddress("trkt", trkt, &b_trkt);

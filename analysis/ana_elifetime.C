@@ -5,14 +5,14 @@
 #include <TCanvas.h>
 
 const int kMaxEvent = 1000000;
-const int kLoopEvent = 1000; // per loop
+const int kLoopEvent = 100; // per loop
 
 void ana_elifetime::Loop()
 {
 
-  double diffphi = 0.3;
-  double diffZ = 5;
-  double crossDist = 20;
+  double diffphi = 0.3;//Not used
+  double diffZ = 5; //Not used
+  double crossDist = 20; //Not used
 
   size_t nbinsX = 15;
   double lowx = 0;
@@ -24,10 +24,12 @@ void ana_elifetime::Loop()
   double higHPT = 200;
   double divHPT = (higHPT - lowHPT)/nbinsHPT;
 
-
+  double trk_z_cut_1 = 3.;
+  double trk_z_cut_2 = 114.;
   double cutThetaXZ[4] = {30,80,100,150};
+  //double cutThetaXZ[4] = {60., 120., -120., -60.};
   double cutThetaYZ[6] = {52,60,85,95,122,130};
-  double trk_len_cut = 10.;
+  double trk_len_cut = 10.; //Threshold for very short tracks
   ////////////////////////
 
 
@@ -69,7 +71,8 @@ void ana_elifetime::Loop()
   // output
   TFile output("fout_ana_elifetime.root","recreate");
 
-
+  TH1F *h1_t0 = new TH1F("h1_t0", "; t0[#mus]; Counts [#]", 200, 0., 1000);
+  TH1F *h1_t0_selected = new TH1F("h1_t0_selected", "; t0[#mus]; Counts [#]", 200, 0., 1000);
   TH1F *h1_trk_x_selected = new TH1F("h1_trk_x", "; x [cm]; Counts [#]", 40, 0., 40.);
 
   TH1F *h1_trk_x_len_selected = new TH1F("h1_trk_x_len_selected", "; Length in X [cm]; Counts [#]", 25, 25., 50);
@@ -86,6 +89,7 @@ void ana_elifetime::Loop()
   TH2F *h2_trk_start_end_z = new TH2F("h2_trk_start_end_z", "; z Start [cm]; z End [cm]",150, -10,  140, 150, -10,  140);
 
   TH2F *h2_trk_startX_startY = new TH2F("h2_trk_startX_startY", "; x Start [cm]; y Start [cm]",120, -60., 60., 200, -10., 190.);
+  TH2F *h2_trk_startZ_startY = new TH2F("h2_trk_startZ_startY", "; z Start [cm]; y Start [cm]",100, 0., 100., 200, -10., 190.);
   TH2F *h2_trk_endX_endY = new TH2F("h2_trk_endX_endY", "; x End [cm]; y End [cm]",120, -60., 60., 200, -10., 190.);
   TH1F *h1_trk_y_len = new TH1F("h1_trk_y_len", "; Length in Y [cm]; Counts [#]", 25, 0., 50);  
   //Cuts
@@ -106,6 +110,7 @@ void ana_elifetime::Loop()
   TH2F *h2_trk_start_end_z_selected = new TH2F("h2_trk_start_end_z_selected", "; z Start [cm]; z End [cm]",150, -10,  140, 150, -10,  140);
 
   TH2F *h2_trk_startX_startY_selected = new TH2F("h2_trk_startX_startY_selected", "; x Start [cm]; y Start [cm]",120, -60., 60., 200, -10., 190.);
+  TH2F *h2_trk_startZ_startY_selected = new TH2F("h2_trk_startZ_startY_selected", "; z Start [cm]; y Start [cm]",100, 0., 100., 200, -10., 190.);
   TH2F *h2_trk_endX_endY_selected = new TH2F("h2_trk_endX_endY_selected", "; x End [cm]; y End [cm]",120, -60., 60., 200, -10., 190.);
   
 
@@ -137,7 +142,14 @@ void ana_elifetime::Loop()
   TH1F *h1_trk_len = new TH1F("h1_trk_len", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
   TH1F *h1_trk_len_tpc0 = new TH1F("h1_trk_len_tpc0", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
   TH1F *h1_trk_len_tpc1 = new TH1F("h1_trk_len_tpc1", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
+
+  TH1F *h1_trk_len_selected = new TH1F("h1_trk_len_selected", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
+  TH1F *h1_trk_len_tpc0_selected = new TH1F("h1_trk_len_tpc0_selected", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
+  TH1F *h1_trk_len_tpc1_selected = new TH1F("h1_trk_len_tpc1_selected", "; Track length [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
   
+  TH1F *h1_trk_lenX = new TH1F("h1_trk_lenX", "; Track length X [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
+  TH1F *h1_trk_lenX_selected = new TH1F("h1_trk_lenX_selected", "; Track length X [cm]; Counts [#]", nbin_trk_len, lbin_trk_len, hbin_trk_len);
+
   TH1F *h1_trk_thetaxz = new TH1F("h1_trk_thetaxz", "; #theta_{xz} [deg]; Counts [#]", nbin_trk_thetaxz, lbin_trk_thetaxz, hbin_trk_thetaxz);
   TH1F *h1_trk_thetayz = new TH1F("h1_trk_thetayz", "; #theta_{yz} [deg]; Counts [#]", nbin_trk_thetayz, lbin_trk_thetayz, hbin_trk_thetayz);
 
@@ -156,7 +168,8 @@ void ana_elifetime::Loop()
 
   TProfile2D *hp2d_angle[3];
 
-  TH1F* h1_dqdx[3];
+  TH1F* h1_dqdx_tpc01_selected[3];
+  TH1F* h1_dqdx_tpc01_selected_trunc[3];
   TH2F* h2_dqdxtime[3];
   TH2F* h2_dqdxhitpeakt_tpc01[3];
   TH2F* h2_dqdxhitpeakt_tpc0[3];
@@ -175,7 +188,8 @@ void ana_elifetime::Loop()
 
     hp2d_angle[p] = new TProfile2D(TString::Format("hp2d_angle_plane_%d",p), TString::Format("Plane %d; #theta_{xz} [deg]; #theta_{yz} [deg]", p), nbin_trk_thetaxz, lbin_trk_thetaxz, hbin_trk_thetaxz, nbin_trk_thetayz, lbin_trk_thetayz, hbin_trk_thetayz);
 
-    h1_dqdx[p] = new TH1F(TString::Format("h1_dqdx_plane_%d",p), "; dQ/dx [ADC/cm]; Counts [#]", nbin_dqdx, lbin_dqdx, hbin_dqdx);
+    h1_dqdx_tpc01_selected[p] = new TH1F(TString::Format("h1_dqdx_tpc01_plane_%d_selected",p), "; dQ/dx [ADC/cm]; Counts [#]", nbin_dqdx, lbin_dqdx, hbin_dqdx);
+    h1_dqdx_tpc01_selected_trunc[p] = new TH1F(TString::Format("h1_dqdx_tpc01_plane_%d_selected_trunc",p), "; dQ/dx [ADC/cm]; Counts [#]", nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxtime[p] = new TH2F(TString::Format("h2_dqdxtime_plane_%d",p), "; Drift time [#mus]; dQ/dx [ADC/cm]", nbin_time, lbin_time, hbin_time, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc01[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc01_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
     h2_dqdxhitpeakt_tpc0[p] = new TH2F(TString::Format("h2_dqdxhitpeakt_tpc0_plane_%d",p), "; Hit Peak Time [#mus]; dQ/dx [ADC/cm]", 100, lowHPT, higHPT, nbin_dqdx, lbin_dqdx, hbin_dqdx);
@@ -237,10 +251,12 @@ void ana_elifetime::Loop()
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       
       if(ntrks == 0) continue;//consider only events with tracks
-      //if(run < 6400 || run > 6781) continue;
-      //if(run < 6044 ) continue;
-      //if(run < 6781 ) continue;
-      //if(run < 6400) continue;
+  
+      if((run < 8898 || run > 8949) && (run < 9613 || run > 9745) && (run < 9358 || run > 9400)) continue;
+      //if((run < 9358 || run > 9400)) continue;
+      
+      //if((run < 8898 || run > 8949)) continue;
+      //if(run < 9613 || run > 9745) continue; //Run5
       double med0 = 0., error0 = 0.;
       double med1 = 0., error1 = 0.;
       double med01 = 0., error01 = 0.;
@@ -306,6 +322,12 @@ void ana_elifetime::Loop()
         h1_trk_endx->Fill(trkend[i][0]);
         h1_trk_endy->Fill(trkend[i][1]);
         h1_trk_endz->Fill(trkend[i][2]);
+        h1_t0 ->Fill(t0[i][2]);
+
+        h1_trk_len->Fill(trklen[i]);
+
+        double trklenX = abs(trkstart[i][0] - trkend[i][0]);
+        h1_trk_lenX->Fill(trklenX);
 
         // record track angle
         double thetaxz_deg = trkthetaxz[i]*radTodeg;
@@ -319,28 +341,63 @@ void ana_elifetime::Loop()
         h2_trk_start_end_z->Fill(trkstart[i][2],trkend[i][2]);
 
         h2_trk_startX_startY->Fill(trkstart[i][0],trkstart[i][1]);
+        h2_trk_startZ_startY->Fill(trkstart[i][2],trkstart[i][1]);
         h2_trk_endX_endY->Fill(trkend[i][0],trkend[i][1]);
+
+        int intpc = -1;
+        if(trkstart[i][0] > -5 && trkend[i][0] > 0){
+          
+          intpc = 1;
+        }else if(trkstart[i][0] < 5 && trkend[i][0] < 0){
+          
+          intpc = 0;
+        }else{
+          continue;
+        }
+
         if(trklen[i] > trk_len_cut) h1_trk_y_len->Fill(abs(trkstart[i][1] - trkend[i][1]));
 
 
         //trkthetaxz and trkthetayz are recorded as from 0 to +-180 depending on the quadrant of vector. 
         thetaxz_deg = abs(thetaxz_deg); thetayz_deg = abs(thetayz_deg);
   
-        //cutThetaXZ[4] = {30,80,100,150};
-        if(thetaxz_deg < cutThetaXZ[0] || (thetaxz_deg > cutThetaXZ[1] && thetaxz_deg < cutThetaXZ[2]) || thetaxz_deg > cutThetaXZ[3]) continue;
-        //cutThetaYZ[6] = {52,60,85,95,122,130};
-        if((thetayz_deg > cutThetaYZ[0] && thetayz_deg < cutThetaYZ[1]) || (thetayz_deg > cutThetaYZ[2] && thetayz_deg < cutThetaYZ[3]) || 
-            (thetayz_deg > cutThetaYZ[4] && thetayz_deg < cutThetaYZ[5])) continue;
+        
         if(trklen[i] < trk_len_cut) continue; // remove very short tracks
-        double trklenX = abs(trkstart[i][0] - trkend[i][0]);
+
+        //cutThetaXZ[4] = {30,80,100,150};
+        
+        //if(thetaxz_deg < cutThetaXZ[0] || (thetaxz_deg > cutThetaXZ[1] && thetaxz_deg < cutThetaXZ[2]) || thetaxz_deg > cutThetaXZ[3]) continue;
+        //cutThetaYZ[6] = {52,60,85,95,122,130};
+        //if (intpc == 0){
+        //if((thetayz_deg > cutThetaYZ[0] && thetayz_deg < cutThetaYZ[1]) || (thetayz_deg > cutThetaYZ[2] && thetayz_deg < cutThetaYZ[3]) || 
+        //    (thetayz_deg > cutThetaYZ[4] && thetayz_deg < cutThetaYZ[5])) continue;
+        //}else{
+        //  if((thetayz_deg > -1.0*cutThetaYZ[0] && thetayz_deg < -1.0*cutThetaYZ[1]) || (thetayz_deg > -1.0*cutThetaYZ[2] && thetayz_deg < -1.0*cutThetaYZ[3]) || 
+        //    (thetayz_deg > -1.0*cutThetaYZ[4] && thetayz_deg < -1.0*cutThetaYZ[5])) continue;
+        //}
+        
+        
         if(trklenX < 28) continue;
+        if(trklen[i] < 30) continue;
         if(trkstart[i][1] < 75 || trkstart[i][1] > 175) continue;
         if(trkend[i][1] < 75 || trkend[i][1] > 175) continue;
+
+        //if(trkstart[i][2] < 3 || trkstart[i][2] > 114) continue;
+        //if(trkend[i][2] < 3 || trkend[i][2] > 114) continue;
+
+        if (! ( trkstart[i][2]<trk_z_cut_1 || trkstart[i][2] > trk_z_cut_2 ||
+                trkend[i][2]<trk_z_cut_1 || trkend[i][2] > trk_z_cut_2 )) continue;
+
+        //cout << "trkstart[i][2] = " << trkstart[i][2] << ", trkend[i][2] = " << trkend[i][2] << endl;
+
         if(trkstart[i][0] > -5 && trkend[i][0] > 0){
           trk_index_selected_tpc1.push_back(i);
+          
         }else if(trkstart[i][0] < 5 && trkend[i][0] < 0){
           trk_index_selected_tpc0.push_back(i);
+          
         }
+
         for (int ip=0; ip<3; ip++) {// trkdqdx[ntrks][planes][hits];
           for (int jj=0; jj<max_hits; jj++) {//looping hits
             h2_dqdxhitpeakt_allplanes->Fill(trkhitpeakt[i][ip][jj], trkdqdx[i][ip][jj]);
@@ -359,7 +416,7 @@ void ana_elifetime::Loop()
         }else{
           continue;
         }
-
+        h1_t0_selected->Fill(t0[i][2]);
       	h1_trk_startx_selected->Fill(trkstart[i][0]);
       	h1_trk_starty_selected->Fill(trkstart[i][1]);
       	h1_trk_startz_selected->Fill(trkstart[i][2]);
@@ -368,13 +425,15 @@ void ana_elifetime::Loop()
       	h1_trk_endy_selected->Fill(trkend[i][1]);
       	h1_trk_endz_selected->Fill(trkend[i][2]);
 
-      	h1_trk_len->Fill(trklen[i]);
+      	h1_trk_len_selected->Fill(trklen[i]);
+        h1_trk_lenX_selected->Fill(abs(trkstart[i][0] - trkend[i][0]));
 
         h2_trk_start_end_y_selected->Fill(trkstart[i][1],trkend[i][1]);
         h2_trk_start_end_x_selected->Fill(trkstart[i][0],trkend[i][0]);
         h2_trk_start_end_z_selected->Fill(trkstart[i][2],trkend[i][2]);
 
         h2_trk_startX_startY_selected->Fill(trkstart[i][0],trkstart[i][1]);
+        h2_trk_startZ_startY_selected->Fill(trkstart[i][2],trkstart[i][1]);
         h2_trk_endX_endY_selected->Fill(trkend[i][0],trkend[i][1]);
 
 
@@ -390,7 +449,7 @@ void ana_elifetime::Loop()
           h1_trk_endy_tpc0_selected->Fill(trkend[i][1]);
           h1_trk_endz_tpc0_selected->Fill(trkend[i][2]);
   
-          h1_trk_len_tpc0->Fill(trklen[i]);
+          h1_trk_len_tpc0_selected->Fill(trklen[i]);
           h2_trk_start_end_x_tpc0_selected->Fill(trkstart[i][0],trkend[i][0]);
           h2_trk_start_end_y_tpc0_selected->Fill(trkstart[i][1],trkend[i][1]);
           h2_trk_start_end_z_tpc0_selected->Fill(trkstart[i][2],trkend[i][2]);
@@ -404,7 +463,7 @@ void ana_elifetime::Loop()
           h1_trk_endy_tpc1_selected->Fill(trkend[i][1]);
           h1_trk_endz_tpc1_selected->Fill(trkend[i][2]);
   
-          h1_trk_len_tpc1->Fill(trklen[i]);
+          h1_trk_len_tpc1_selected->Fill(trklen[i]);
           h2_trk_start_end_x_tpc1_selected->Fill(trkstart[i][0],trkend[i][0]);
           h2_trk_start_end_y_tpc1_selected->Fill(trkstart[i][1],trkend[i][1]);
           h2_trk_start_end_z_tpc1_selected->Fill(trkstart[i][2],trkend[i][2]);
@@ -423,7 +482,7 @@ void ana_elifetime::Loop()
 	        for (int jj=0; jj<max_hits; jj++) {//looping hits
 	          if (trkdqdx[i][ip][jj] == -9999.0 || trkx[i][ip][jj] == -9999.0 || trkt[i][ip][jj] == -9999.0) continue;
             pair<float, float> temp_hpt_dqdx;
-	          h1_dqdx[ip]->Fill(trkdqdx[i][ip][jj]);
+	          h1_dqdx_tpc01_selected[ip]->Fill(trkdqdx[i][ip][jj]);
 	          h2_dqdxtime[ip]->Fill(trkt[i][ip][jj], trkdqdx[i][ip][jj]);
             h2_dqdxhitpeakt_tpc01[ip]->Fill(trkhitpeakt[i][ip][jj], trkdqdx[i][ip][jj]);
             
@@ -473,6 +532,7 @@ void ana_elifetime::Loop()
             if(intpc == 1) h2_dqdxhitpeakt_tpc1_trunc[ip]->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
             h2_dqdxhitpeakt_allplanes_trunc->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
             h2_dqdxhitpeakt_tpc01_trunc[ip]->Fill(hpt_dqdx_v[jj].second, hpt_dqdx_v[jj].first);
+            h1_dqdx_tpc01_selected_trunc[ip]->Fill(hpt_dqdx_v[jj].first);
           }
           hpt_dqdx_v.clear();
   	    }//loop over ip
@@ -632,13 +692,13 @@ void ana_elifetime::Loop()
   int nplots01 = run_elife_tpc01_plane2_v.size();
   Double_t runr01[nplots01], life01[nplots01], error_elife01[nplots01], zeros[nplots01];
   //TH1F *h1_run_elife_tpc0_plane2 = new TH1F("h1_run_elife_plane2", "; Run Number; Electron Lifetime [#mus]", nplots, run_elife_tpc1_plane2_v[0].first, run_elife_tpc1_plane2_v[nplots - 1].first);
-  for (int i = 0; i < nplots01; ++i){
+  for (int i = 0; i < nplots01-1; ++i){
     runr01[i] = run_elife_tpc01_plane2_v[i].first;
     life01[i] = run_elife_tpc01_plane2_v[i].second;
     error_elife01[i] = pow(run_elife_tpc01_plane2_v[i].second, 2)*error01_v[i];
     zeros[i] = 0;
   }
-  TGraphErrors* g1_eLifeVSRun_tpc01_plane2 = new TGraphErrors(nplots01,runr01,life01,zeros,error_elife01);
+  TGraphErrors* g1_eLifeVSRun_tpc01_plane2 = new TGraphErrors(nplots01-1,runr01,life01,zeros,error_elife01);
   g1_eLifeVSRun_tpc01_plane2->SetName("g1_eLifeVSRun_tpc01_plane2");
   //g1_eLifeVSRun_tpc01_plane2->SetTitle("Run 3 Electron Lifetime - Plane 2");
   g1_eLifeVSRun_tpc01_plane2->GetXaxis()->SetTitle("Run Number");

@@ -129,6 +129,7 @@ private:
   int trkid[kMaxTracks];
   float trkminx[kMaxTracks][3];
   float trkstart[kMaxTracks][3];
+  float t0[kMaxTracks][3];
 
   float trkend[kMaxTracks][3];
   float trklen[kMaxTracks];
@@ -271,7 +272,8 @@ void icebergelifetime::analyze(art::Event const& e)
             minpht = hitlist[tpIndex]->PeakTime()*(500./1000.f); //in microseconds
           }
         }// End loop hits
-
+        t0[ntrks][planenum] = (float) minpht;
+        cout << "minpht = " << minpht << endl;
         trkminx[ntrks][planenum] = (float) minx;
         
         for(size_t iHit = 0; iHit < NHits; ++iHit) {
@@ -330,6 +332,7 @@ void icebergelifetime::beginJob()
   fEventTree->Branch("trkstartcosxyz", trkstartcosxyz, "trkstartcosxyz[ntrks][3]/F");
   fEventTree->Branch("trkendcosxyz", trkendcosxyz, "trkendcosxyz[ntrks][3]/F");
   fEventTree->Branch("trkminx", &trkminx, "trkminx[ntrks][3]/F");
+  fEventTree->Branch("t0", &t0, "t0[ntrks][3]/F");
   fEventTree->Branch("ntrkhits", ntrkhits, "ntrkhits[ntrks][3]/I");
 
   fEventTree->Branch("trkdqdx", trkdqdx, "trkdqdx[ntrks][3][1000]/F");
@@ -374,6 +377,7 @@ void icebergelifetime::reset(){
       
       ntrkhits[i][j] = -9999;
       trkminx[i][j] = -9999.0;
+      t0[i][j] = -9999.0;
       for (int k=0; k<kMaxHits; k++) {
         trkpitchvec[i][j][k] = -9999.0;
         trkdqdx[i][j][k] = -9999.0;
